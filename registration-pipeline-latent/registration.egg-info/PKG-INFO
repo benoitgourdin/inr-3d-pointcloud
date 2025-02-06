@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: registration
+Version: 0.0.0
+Summary: registration env
+Author-email: Benoit Gourdin <benoit.gourdin@tum.de>
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: beartype
+Requires-Dist: pyyaml
+Requires-Dist: jaxtyping
+Requires-Dist: numpy
+Requires-Dist: torch
+Requires-Dist: scipy
+Requires-Dist: open3d
+Requires-Dist: wandb
+Requires-Dist: h5py
+Requires-Dist: torch_geometric
+Requires-Dist: random-fourier-features-pytorch

@@ -1,0 +1,14 @@
+# Path to directory where all the models are
+model_basedir: /home/mil/gourdin/inr_3d_data/results/inr-implicit-shape-reconstruction-mesh/models
+
+# Path to base data directory
+data_basedir: /home/mil/gourdin/inr_3d_data/data
+# Directory name with labels within base data directory
+labels_dirname: medshapenet_vertebra_pkl
+#labels_dirname: medshapenet_vertebra
+
+# Path to directory with casename files
+casefiles_basedir: /home/mil/gourdin/inr_3d_data/inr-implicit-shape-reconstruction-mesh/casename_files/medshapenet
+
+# Path to base output directory for reconstructions
+output_basedir: /home/mil/gourdin/inr_3d_data/results/inr-implicit-shape-reconstruction-mesh/reconstructions

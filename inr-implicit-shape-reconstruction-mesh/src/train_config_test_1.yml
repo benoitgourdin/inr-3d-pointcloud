@@ -1,0 +1,9 @@
+model_name: mesh_test_11_overfitting_divroc
+
+# 0 -- AutoDecoder (AD), 1 -- ReconNet (RN)
+task_type: 0
+use_thick_slices: False
+
+num_epochs: 4000
+
+batch_size_train: 1

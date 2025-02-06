@@ -1,0 +1,29 @@
+# model_name: registration_lung250M_optimal_hyp_20_pairs
+model_name: registration_lung250M_generalization
+# Base directory of training/test data
+data_basedir: /vol/aimspace/users/gob/Dataset/DeformingThings4D/animals
+# Path of data to overfit
+data_path: /vol/aimspace/users/gob/Dataset/DeformingThings4D/animals/bear3EP_Attack4/bear3EP_Attack4.anime
+# Number of layers in RegistrationINR
+op_num_layers: 8
+# Layers with coordinates in RegistrationINR
+op_coord_layers: [0]
+# Batch sizes
+batch_size_train: 1
+batch_size_val: 1
+# Epochs
+num_epochs: 1000
+# Log to weight&biases every x epochs (train and val)
+log_epoch_count: 100
+# Store model checkpoint every x epochs
+checkpoint_epoch_count: 50
+max_num_checkpoints: 5
+# Number of workers
+num_workers: 2
+# Training metric
+train_metric: mse
+# Validation metric
+val_metric: mae
+# Latent
+lat_reg_lambda: 1.0e-4
+latent_dim: 128

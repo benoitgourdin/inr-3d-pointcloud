@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "registration"
+authors = [
+    {name = "Benoit Gourdin", email = "benoit.gourdin@tum.de"},
+]
+description = "registration env"
+requires-python = ">=3.9"
+version = "0.0.0"
+dependencies = [
+    'beartype',
+    'pyyaml',
+    'jaxtyping',
+    'numpy',
+    'torch', 
+    'torchvision',
+    'torchaudio',
+    'scipy',
+    'open3d',
+    'wandb',
+    'h5py',
+    'torch_geometric',
+    'random-fourier-features-pytorch',
+]
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["registration"]
