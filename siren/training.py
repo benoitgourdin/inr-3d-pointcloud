@@ -2,11 +2,8 @@
 '''
 
 import torch
-import psutil
 import open3d as o3d
 import utils
-import sdf_meshing
-# from torch.utils.tensorboard import SummaryWriter
 from tqdm.autonotebook import tqdm
 import time
 import numpy as np
@@ -24,23 +21,6 @@ def square_distance(src, dst):
     dist += torch.sum(src**2, -1).view(b, n, 1)
     dist += torch.sum(dst**2, -1).view(b, 1, m)
     return dist
-
-
-# class ChamferDistance(torch.nn.Module):
-
-#     def __init__(self):
-#         super().__init__()
-
-#     def forward(self, pc1, pc2):
-#         # PointPWC implementation
-#         sqr_dist12 = square_distance(pc1, pc2)
-#         dist1, _ = torch.topk(
-#             sqr_dist12, 1, dim=-1, largest=False, sorted=False)
-#         dist2, _ = torch.topk(
-#             sqr_dist12, 1, dim=1, largest=False, sorted=False)
-#         dist1 = dist1.squeeze(2)
-#         dist2 = dist2.squeeze(1)
-#         return dist1.sum(dim=1).mean() + dist2.sum(dim=1).mean()
 
 
 class ChamferDistance(torch.nn.Module):
@@ -118,9 +98,6 @@ def train(wandb,
 
     checkpoints_dir = os.path.join(model_dir, 'checkpoints')
     utils.cond_mkdir(checkpoints_dir)
-
-    # writer = SummaryWriter(summaries_dir)
-
     total_steps = 0
     with tqdm(total=len(train_dataloader) * epochs) as pbar:
         train_losses = []
@@ -177,33 +154,13 @@ def train(wandb,
                     single_loss = loss.mean()
 
                     if loss_schedules is not None and loss_name in loss_schedules:
-                        # writer.add_scalar(
-                        #     loss_name + "_weight",
-                        #     loss_schedules[loss_name](total_steps),
-                        #     total_steps)
                         single_loss *= loss_schedules[loss_name](total_steps)
-
-                    # writer.add_scalar(loss_name, single_loss, total_steps)
                     train_loss += single_loss
-                    # wandb.log({
-                    #     f"metric/train ({loss_name})": single_loss,
-                    #     "global_step": total_steps
-                    # })
-
                 train_losses.append(train_loss.item())
-                # writer.add_scalar("total_train_loss", train_loss, total_steps)
                 wandb.log({
                     f"metric/train (train_loss)": train_loss.item(),
                     "global_step": total_steps
                 })
-
-                # if not total_steps % steps_til_summary:
-                #     torch.save(
-                #         model.state_dict(),
-                #         os.path.join(checkpoints_dir, 'model_current.pth'))
-                #     # summary_fn(model, device, model_input, gt, model_output,
-                #     #            wandb, total_steps)
-
                 if not use_lbfgs:
                     optim.zero_grad()
                     train_loss.backward(retain_graph=False)
@@ -221,11 +178,6 @@ def train(wandb,
                 pbar.update(1)
 
             if not epoch % epochs_til_summary:
-                # sdf_meshing.create_mesh(
-                #     device,
-                #     decoder,
-                #     os.path.join(model_dir, 'test'),
-                #     N=100)
                 tqdm.write("Step %d, Total loss %0.6f, iteration time %0.6f" %
                            (total_steps, train_loss, time.time() - start_time))
 
@@ -302,9 +254,6 @@ def train(wandb,
                             pcd.points = o3d.utility.Vector3dVector(
                                 predicted_pointcloud_np)
                             o3d.io.write_point_cloud(predicted_path, pcd)
-
-                        # writer.add_scalar("val_loss", np.mean(val_losses),
-                        #                   total_steps)
                     model.train()
 
                 total_steps += 1

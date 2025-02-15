@@ -1,5 +1,4 @@
 import os.path
-import glob
 import os
 
 os.environ['PYOPENGL_PLATFORM'] = 'egl'
@@ -95,10 +94,6 @@ def save_ply(image_path, name):
 
 
 if __name__ == '__main__':
-    # data_dir = "/u/home/gob/repo/data/MedShapeNet/vertebra_stl"
-    # for filepath in glob.glob(os.path.join(data_dir, '*.stl')):
-    #     print(filepath)
-    #     save_pkl_file(filepath)
     save_ply(
         "/vol/aimspace/users/gob/Dataset/MedShapeNet/vertebra_stl/000000_vertebrae.stl",
         "000000")

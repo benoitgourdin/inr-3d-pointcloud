@@ -54,7 +54,6 @@ def make_coordinate_tensor(dims=(28, 28, 28), integer=False):
         coordinate_tensor = [torch.linspace(-1, 1, dims[i]) for i in range(3)]
     coordinate_tensor = torch.meshgrid(*coordinate_tensor)
     coordinate_tensor = torch.stack(coordinate_tensor, dim=3)
-    #coordinate_tensor = coordinate_tensor.view([np.prod(dims), 3])
     coordinate_tensor = coordinate_tensor.cuda()
     return coordinate_tensor
 
@@ -87,45 +86,14 @@ def train_one_epoch(task_type: config_io.TaskType, ds_loader: data.DataLoader, n
         else:
             raise ValueError(f'Unknown task type {task_type}.')
         if wandb.config.loss_function == "divroc":
-            # mask_gt = labels.squeeze() == 1
-            # mask_pred = labels_pred.squeeze() == 1
-            # gt_coords = coords.squeeze()[mask_gt].to(dtype=torch.float32, device=device)
-            # pred_coords = coords.squeeze()[mask_pred].to(dtype=torch.float32, device=device)
-            # input_gt = torch.ones(1, 1, gt_coords.shape[0], 1, 1).to(device)
-            # grid_gt = gt_coords.squeeze().unsqueeze(0).unsqueeze(2).unsqueeze(3).to(device)
-            # input_pred = torch.ones(1, 1, pred_coords.shape[0], 1, 1).to(device)
-            # grid_pred = pred_coords.squeeze().unsqueeze(0).unsqueeze(2).unsqueeze(3).to(device)
-
             gt_coords = coords.squeeze().to(dtype=torch.float32, device=device)
             pred_coords = coords.squeeze().to(dtype=torch.float32, device=device)
             input_gt = labels.squeeze().unsqueeze(0).unsqueeze(2).unsqueeze(3).unsqueeze(4).to(device)
-            # input_gt = labels.squeeze().unsqueeze(0).unsqueeze(0).unsqueeze(3).unsqueeze(4).to(device)
             grid_gt = gt_coords.squeeze().unsqueeze(0).unsqueeze(2).unsqueeze(3).to(device)
             input_pred = labels_pred.squeeze().unsqueeze(0).unsqueeze(2).unsqueeze(3).unsqueeze(4).to(device)
-            # input_pred = labels_pred.squeeze().unsqueeze(0).unsqueeze(0).unsqueeze(3).unsqueeze(4).to(device)
             grid_pred = pred_coords.squeeze().unsqueeze(0).unsqueeze(2).unsqueeze(3).to(device)
-
             shape = [1, 1, 128, 128, 128]
             loss = criterion(nn_utils.DiVRoC.apply(input_pred, grid_pred, shape), nn_utils.DiVRoC.apply(input_gt, grid_gt, shape))
-
-            # value_to_check = rast_gt[0, 0, 0, 0, 0]
-            # mask = rast_gt != value_to_check
-            # count_non_equal = mask.sum().item()
-            # print(128 * 128 * 128)
-            # print(count_non_equal)
-            # indices = torch.nonzero(mask, as_tuple=True)
-            # if indices[0].numel() > 0:
-            #     first_non_zero_index = tuple(index[0].item() for index in indices)
-            #     first_non_zero_value = rast_gt[first_non_zero_index]
-            #     print(f"One value different from -0: {first_non_zero_value.item()}")
-            # else:
-            #     print("All values are equal to -0.")
-            # grid = rast_gt.squeeze().cpu().numpy()
-            # value_to_check = grid[0][0][0]
-            # mask = grid != value_to_check
-            # print(mask.sum().item())
-            # with h5py.File('/home/mil/gourdin/inr_3d_data/voxelgrid.h5', 'w') as f:
-            #     f.create_dataset('voxelgrid', data=grid)
         else:
             loss = criterion(labels_pred, labels)
         if lat_reg is not None and lat_reg_lambda > 0:
@@ -234,7 +202,6 @@ def validate(task_type: config_io.TaskType, ds_loader: data.DataLoader, net: tor
                 raise ValueError(f'Unknown task type {task_type}.')
 
             # Metric returns the sum
-            # metric_running += metric(labels_pred, labels).item()
             pred_array = torch.sigmoid(labels_pred).gt(0.5).squeeze(0).squeeze(1).squeeze(1).cpu().detach().numpy()
             labels_array = labels.squeeze(0).squeeze(1).squeeze(1).cpu().detach().numpy()
             indices_pred = np.where(pred_array)[0]
@@ -286,12 +253,6 @@ def main():
     if model_dir is not None:
         if model_dir.exists():
             shutil.rmtree(model_dir)
-            # val = input("The model directory %s exists. Overwrite? (y/n)" % model_dir)
-            # if val == 'y':
-            #     shutil.rmtree(model_dir)
-            # else:
-            #     raise ValueError('Model directory already exists. Exiting to prevent accidental '
-            #                      f'overwriting.\n{model_dir}')
         model_dir.mkdir()
         # Write the parameters to the model folder
         config_io.write_config(config_filepath, model_dir)
@@ -325,29 +286,29 @@ def main():
     print(net)
 
     if task_type == config_io.TaskType.AD:
-        # lr_lats = params['learning_rate_lat']
+        lr_lats = params['learning_rate_lat']
         lr_lats = wandb.config.latent_learning_rate
         latent_dim = params['latent_dim']
         num_examples_train = len(ds_loader_train.dataset)  # type: ignore[arg-type]
         # Initialization scaling follows DeepSDF
-        # latents_train = torch.nn.Parameter(
-        #     torch.normal(0.0, 1 / math.sqrt(latent_dim), [num_examples_train, latent_dim],
-        #                  device=device))
+        latents_train = torch.nn.Parameter(
+            torch.normal(0.0, 1 / math.sqrt(latent_dim), [num_examples_train, latent_dim],
+                         device=device))
         latents_train = torch.normal(0.0, 1 / math.sqrt(128), [1, 128]).to(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
         if optimizer_param == "adam":
             optimizer = torch.optim.Adam([
                 {'params': net.parameters(), 'lr': learning_rate},
-                # {'params': latents_train, 'lr': lr_lats}
+                {'params': latents_train, 'lr': lr_lats}
             ])
         elif optimizer_param == "sgd":
             optimizer = torch.optim.SGD([
                 {'params': net.parameters(), 'lr': learning_rate},
-                # {'params': latents_train, 'lr': lr_lats}
+                {'params': latents_train, 'lr': lr_lats}
             ])
         else:
             optimizer = torch.optim.Adam([
                 {'params': net.parameters(), 'lr': learning_rate},
-                # {'params': latents_train, 'lr': lr_lats}
+                {'params': latents_train, 'lr': lr_lats}
             ])
     else:
         latents_train = torch.nn.Parameter(torch.empty(0))
@@ -391,15 +352,14 @@ if __name__ == '__main__':
             "learning_rate": {"values": [0.5e-1, 0.5e-2, 0.5e-3, 0.5e-4, 0.5e-5]},
             "latent_learning_rate": {"values": [1.0e-3]},
             "sample_batch_share": {"values": [1.0]},
-            "loss_function": {"values": ["dice_bce"]}, #"dice_bce",
+            "loss_function": {"values": ["dice_bce"]},
             "optimizer": {"values": ["adam", "sgd"]},
             "dropout": {"values": [0.0, 0.5]},
             "hidden_layer_size": {"values": [128, 256]},
-            "activation_function": {"values": ["sine", "relu"]}, #"relu",
+            "activation_function": {"values": ["sine", "relu"]},
             "encoding": {"values": [False, True]},
         },
     }
     params, config_filepath = config_io.parse_config_train()
     sweep_id = wandb.sweep(sweep=sweep_configuration, project=params['model_name'])
     wandb.agent(sweep_id, function=main, count=160)
-    #main()
